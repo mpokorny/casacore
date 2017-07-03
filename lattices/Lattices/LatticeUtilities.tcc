@@ -80,38 +80,45 @@ void LatticeUtilities::copyDataAndMask(LogIO& os, MaskedLattice<T>& out,
    }                        
    if (!doMask) zeroMasked = False;
 
-// Use the same stepper for input and output.
+// Use the same stepper for input and both outputs.
                       
    IPosition cursorShape = out.niceCursorShape(); 
    LatticeStepper stepper (out.shape(), cursorShape, LatticeStepper::RESIZE);
 
-// Create input lattice iterator 
+// Create lattice iterators
 
-   RO_MaskedLatticeIterator<T> iter(in, stepper);
-   for (iter.reset(); !iter.atEnd(); iter++) {
+   RO_MaskedLatticeIterator<T> inIter(in, stepper);
+   LatticeIterator<T> outIter(out, stepper);
+   SPtrHolder<LatticeIterator<Bool> > maskIter;
+   if (doMask) {
+       maskIter.reset(new LatticeIterator<Bool>(*pMaskOut, stepper));
+       maskIter->reset();
+   }
+
+   for (inIter.reset(), outIter.reset(); !inIter.atEnd(); ++inIter, ++outIter) {
 
 // Put the pixels
 
-      IPosition cursorShape = iter.cursorShape();
       if (zeroMasked) {
-         Array<T> pixels = iter.cursor().copy();
-         const Array<Bool>& mask = iter.getMask();
+         Array<T> pixels = inIter.cursor().copy();
+         const Array<Bool>& mask = inIter.getMask();
 //
          typename Array<Bool>::const_iterator mIt;
          typename Array<T>::iterator dIt;
-	 typename Array<T>::iterator dItend = pixels.end();
+         typename Array<T>::iterator dItend = pixels.end();
          for (dIt=pixels.begin(),mIt=mask.begin(); dIt!=dItend; ++dIt,++mIt) {
             if (!(*mIt)) *dIt = 0.0;
          }
-         out.putSlice(pixels, iter.position());
+         outIter.woCursor() = pixels;
       } else {
-         out.putSlice(iter.cursor(), iter.position());
+         outIter.woCursor() = inIter.cursor();
       }
 
 // Put the mask
 
       if (doMask) {
-         pMaskOut->putSlice(iter.getMask(), iter.position());
+          maskIter->woCursor() = inIter.getMask();
+          ++(*maskIter);
       }
    }
 }
