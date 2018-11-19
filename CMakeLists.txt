@@ -21,7 +21,7 @@ set(PROJECT_VERSION
   "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
 
 SET(NO_SOVERSION FALSE CACHE BOOL "do not add version information to shared libraries")
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_NAME "casacore")
@@ -54,8 +54,6 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libcfitsio3, libgfortran3")
 include(CPack)
 
 enable_language (Fortran)
-
-set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 # By default build only Python2 bindings
 option (BUILD_PYTHON "Build the python bindings" YES)
